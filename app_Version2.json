@@ -1,0 +1,43 @@
+{
+  "name": "Simple QRIS Payment",
+  "description": "Simple QRIS payment system using Duitku payment gateway",
+  "repository": "https://github.com/masarifys/simple-qris-payment",
+  "logo": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/qrcode.svg",
+  "keywords": ["qris", "payment", "duitku", "nodejs", "heroku"],
+  "image": "heroku/nodejs",
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "NODE_ENV": {
+      "description": "Node.js environment",
+      "value": "production"
+    },
+    "DUITKU_MERCHANT_CODE": {
+      "description": "Your Duitku merchant code from dashboard",
+      "required": true
+    },
+    "DUITKU_API_KEY": {
+      "description": "Your Duitku API key from dashboard", 
+      "required": true
+    },
+    "DUITKU_BASE_URL": {
+      "description": "Duitku API base URL",
+      "value": "https://sandbox.duitku.com/webapi/api",
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [],
+  "scripts": {
+    "postdeploy": "echo 'Deployment completed! Configure your callback URLs in Duitku dashboard.'"
+  }
+}
