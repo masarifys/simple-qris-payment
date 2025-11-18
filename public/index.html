@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRIS Payment - Pembayaran Mudah</title>
+    <meta name="description" content="Sistem pembayaran QRIS yang mudah dan aman">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzY2N0VFQSIvPgo8cGF0aCBkPSJNOCAxMEg2VjhIMTBWNkg4VjEwWiIgZmlsbD0id2hpdGUiLz4KPHA+"}">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Open Graph meta tags -->
+    <meta property="og:title" content="QRIS Payment - Pembayaran Mudah">
+    <meta property="og:description" content="Sistem pembayaran QRIS yang mudah dan aman">
+    <meta property="og:type" content="website">
+</head>
+<body>
+    <div class="container">
+        <div class="payment-card">
+            <div class="header">
+                <div class="logo">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/>
+                        <rect x="7" y="7" width="2" height="2" fill="currentColor"/>
+                        <rect x="15" y="7" width="2" height="2" fill="currentColor"/>
+                        <rect x="7" y="15" width="2" height="2" fill="currentColor"/>
+                        <rect x="11" y="11" width="2" height="2" fill="currentColor"/>
+                    </svg>
+                </div>
+                <h1>💳 QRIS Payment</h1>
+                <p>Pembayaran mudah dengan scan QR Code</p>
+            </div>
+
+            <!-- Payment Form -->
+            <form id="paymentForm" class="payment-form">
+                <div class="form-group">
+                    <label for="customerName">
+                        <span class="required">*</span> Nama Lengkap
+                    </label>
+                    <input 
+                        type="text" 
+                        id="customerName" 
+                        name="customerName" 
+                        required 
+                        minlength="2"
+                        maxlength="50"
+                        placeholder="Masukkan nama lengkap"
+                        autocomplete="name"
+                    >
+                    <small class="form-help">Nama akan tampil di struk pembayaran</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="customerEmail">
+                        <span class="required">*</span> Email
+                    </label>
+                    <input 
+                        type="email" 
+                        id="customerEmail" 
+                        name="customerEmail" 
+                        required
+                        maxlength="100"
+                        placeholder="contoh@email.com"
+                        autocomplete="email"
+                    >
+                    <small class="form-help">Untuk konfirmasi pembayaran</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="paymentAmount">
+                        <span class="required">*</span> Jumlah Pembayaran (Rp)
+                    </label>
+                    <input 
+                        type="number" 
+                        id="paymentAmount" 
+                        name="paymentAmount" 
+                        min="1000" 
+                        max="50000000"
+                        step="1000"
+                        required
+                        placeholder="0"
+                        autocomplete="off"
+                    >
+                    <small class="form-help">Minimum Rp 1.000, maksimum Rp 50.000.000</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemDetails">Deskripsi Pembayaran (Opsional)</label>
+                    <textarea 
+                        id="itemDetails" 
+                        name="itemDetails" 
+                        rows="3" 
+                        maxlength="200"
+                        placeholder="Deskripsi pembayaran (misal: donasi, pembelian produk, dll.)"
+                    ></textarea>
+                    <small class="form-help">Opsional - untuk keterangan tambahan</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="payButton">
+                    <span class="btn-text">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                        Buat Pembayaran
+                    </span>
+                    <div class="loading-spinner" style="display: none;"></div>
+                </button>
+            </form>
+
+            <!-- Payment Result -->
+            <div id="paymentResult" class="payment-result" style="display: none;">
+                <div class="qr-section">
+                    <h3>💳 Scan QR Code untuk Bayar</h3>
+                    <div id="qrCode" class="qr-code"></div>
+                    <div class="payment-info">
+                        <div class="info-row">
+                            <span class="label">Order ID:</span>
+                            <span id="orderId" class="value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Jumlah:</span>
+                            <span id="paymentAmountDisplay" class="value amount"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Nama:</span>
+                            <span id="customerNameDisplay" class="value"></span>
+                        </div>
+                    </div>
+                    <div class="payment-status">
+                        <div class="status-indicator waiting">
+                            <div class="pulse"></div>
+                            <span>Menunggu pembayaran...</span>
+                        </div>
+                        <small class="status-help">Pembayaran akan otomatis terdeteksi setelah Anda scan QR code</small>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="checkPaymentStatus()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 12S4 4 12 4S23 12 23 12S20 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            Cek Status
+                        </button>
+                        <button class="btn btn-outline" onclick="resetForm()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="1,4 1,10 7,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M3.51 15A9 9 0 1 0 6 5L1 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Buat Baru
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>🔒 Pembayaran aman dengan Duitku</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
