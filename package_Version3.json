@@ -1,0 +1,42 @@
+{
+  "name": "simple-qris-payment",
+  "version": "1.0.0",
+  "description": "Simple QRIS payment system using Duitku gateway - Ready for Heroku deployment",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "heroku-postbuild": "echo 'Build completed successfully'"
+  },
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "helmet": "^7.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "qris",
+    "payment",
+    "duitku",
+    "nodejs",
+    "heroku",
+    "indonesia",
+    "payment-gateway"
+  ],
+  "author": "masarifys",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/masarifys/simple-qris-payment.git"
+  },
+  "homepage": "https://github.com/masarifys/simple-qris-payment#readme"
+}
