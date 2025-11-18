@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembayaran Berhasil - QRIS Payment</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzI4QTc0NSIvPgo+">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="payment-card success-card">
+            <div class="success-animation">
+                <div class="success-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="11" fill="#28a745"/>
+                        <path d="M8 12L11 15L16 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+            </div>
+            <h1>✅ Pembayaran Berhasil!</h1>
+            <p class="success-message">Terima kasih! Pembayaran Anda telah berhasil diproses.</p>
+            
+            <div class="success-details">
+                <div class="detail-card">
+                    <h3>📧 Konfirmasi Email</h3>
+                    <p>Konfirmasi pembayaran telah dikirim ke email yang Anda daftarkan.</p>
+                </div>
+                
+                <div class="detail-card">
+                    <h3>⏱️ Waktu Proses</h3>
+                    <p>Pembayaran diproses secara real-time menggunakan sistem QRIS yang aman.</p>
+                </div>
+                
+                <div class="detail-card">
+                    <h3>🔒 Keamanan</h3>
+                    <p>Transaksi Anda telah diamankan dengan enkripsi standar industri.</p>
+                </div>
+            </div>
+
+            <div class="success-actions">
+                <a href="/" class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Kembali ke Halaman Utama
+                </a>
+                
+                <button onclick="window.print()" class="btn btn-outline">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6 18H4A2 2 0 0 1 2 16V11A2 2 0 0 1 4 9H20A2 2 0 0 1 22 11V16A2 2 0 0 1 20 18H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="6" y="14" width="12" height="8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Cetak Struk
+                </button>
+            </div>
+
+            <div class="support-info">
+                <h4>💬 Butuh Bantuan?</h4>
+                <p>Jika Anda memiliki pertanyaan tentang pembayaran ini, silakan hubungi customer service kami.</p>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>🔒 Powered by Duitku Payment Gateway</p>
+        </div>
+    </div>
+
+    <script>
+        // Add some celebration animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const successIcon = document.querySelector('.success-icon');
+            setTimeout(() => {
+                successIcon.classList.add('animate-bounce');
+            }, 500);
+        });
+
+        // Auto-hide after 30 seconds for demo
+        setTimeout(() => {
+            const autoMessage = document.createElement('div');
+            autoMessage.className = 'auto-message';
+            autoMessage.innerHTML = '<small>💡 Halaman akan otomatis kembali ke beranda dalam 10 detik...</small>';
+            document.querySelector('.success-card').appendChild(autoMessage);
+            
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 10000);
+        }, 30000);
+    </script>
+</body>
+</html>
