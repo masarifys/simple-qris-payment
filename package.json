@@ -9,8 +9,8 @@
     "heroku-postbuild": "echo 'Build completed successfully'"
   },
   "engines": {
-    "node": "18.x",
-    "npm": "9.x"
+    "node": ">=24.x",
+    "npm": ">=10.x"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -18,7 +18,9 @@
     "axios": "^1.6.2",
     "cors": "^2.8.5",
     "body-parser": "^1.20.2",
-    "helmet": "^7.1.0"
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

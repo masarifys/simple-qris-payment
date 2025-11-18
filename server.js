@@ -4,6 +4,8 @@ const crypto = require('crypto');
 const axios = require('axios');
 const path = require('path');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
 require('dotenv').config();
 
 const app = express();
@@ -25,6 +27,25 @@ app.use(helmet({
         },
     },
 }));
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const paymentLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 5, // Limit payment creation to 5 per minute per IP
+    message: 'Terlalu banyak permintaan pembayaran, silakan tunggu sebentar.',
+    skipSuccessfulRequests: false,
+});
+
+// Apply rate limiting to all routes
+app.use(limiter);
 
 // Middleware
 app.use(cors());
@@ -92,38 +113,42 @@ function verifyCallbackSignature(merchantCode, amount, merchantOrderId, apiKey) 
     return crypto.createHash('md5').update(signatureString).digest('hex');
 }
 
-// Input validation middleware
-function validatePaymentInput(req, res, next) {
-    const { customerName, customerEmail, paymentAmount } = req.body;
-    
-    if (!customerName || customerName.trim().length < 2) {
+// Input validation rules
+const paymentValidationRules = [
+    body('customerName')
+        .trim()
+        .isLength({ min: 2, max: 50 })
+        .withMessage('Nama harus diisi minimal 2 karakter dan maksimal 50 karakter')
+        .matches(/^[a-zA-Z\s]+$/)
+        .withMessage('Nama hanya boleh berisi huruf dan spasi')
+        .escape(),
+    body('customerEmail')
+        .trim()
+        .isEmail()
+        .withMessage('Format email tidak valid')
+        .normalizeEmail(),
+    body('paymentAmount')
+        .isInt({ min: 1000, max: 50000000 })
+        .withMessage('Jumlah pembayaran harus antara Rp 1.000 dan Rp 50.000.000')
+        .toInt(),
+    body('itemDetails')
+        .optional()
+        .trim()
+        .isLength({ max: 200 })
+        .withMessage('Deskripsi maksimal 200 karakter')
+        .escape()
+];
+
+// Validation error handler
+function handleValidationErrors(req, res, next) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
         return res.status(400).json({
             success: false,
-            message: 'Nama harus diisi minimal 2 karakter'
+            message: errors.array()[0].msg,
+            errors: errors.array()
         });
     }
-    
-    if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
-        return res.status(400).json({
-            success: false,
-            message: 'Email tidak valid'
-        });
-    }
-    
-    if (!paymentAmount || parseInt(paymentAmount) < 1000) {
-        return res.status(400).json({
-            success: false,
-            message: 'Minimum pembayaran adalah Rp 1.000'
-        });
-    }
-    
-    if (parseInt(paymentAmount) > 50000000) {
-        return res.status(400).json({
-            success: false,
-            message: 'Maksimum pembayaran adalah Rp 50.000.000'
-        });
-    }
-    
     next();
 }
 
@@ -151,7 +176,7 @@ app.get('/error', (req, res) => {
 });
 
 // Create payment endpoint
-app.post('/create-payment', validatePaymentInput, async (req, res) => {
+app.post('/create-payment', paymentLimiter, paymentValidationRules, handleValidationErrors, async (req, res) => {
     try {
         const { customerName, customerEmail, paymentAmount, itemDetails } = req.body;
         const urls = getAppUrls(req);
