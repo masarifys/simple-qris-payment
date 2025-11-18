@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembayaran Gagal - QRIS Payment</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iI0RDMzU0NSIvPgo+">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="payment-card error-card">
+            <div class="error-animation">
+                <div class="error-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="11" fill="#dc3545"/>
+                        <path d="M8 8L16 16M16 8L8 16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </div>
+            <h1>❌ Pembayaran Gagal</h1>
+            <p class="error-message">Maaf, terjadi kesalahan dalam proses pembayaran Anda.</p>
+            
+            <div class="error-details">
+                <div class="detail-card">
+                    <h3>🔍 Kemungkinan Penyebab:</h3>
+                    <ul>
+                        <li>Koneksi internet tidak stabil</li>
+                        <li>Waktu pembayaran sudah habis</li>
+                        <li>Saldo tidak mencukupi</li>
+                        <li>Pembayaran dibatalkan</li>
+                    </ul>
+                </div>
+                
+                <div class="detail-card">
+                    <h3>💡 Solusi:</h3>
+                    <ul>
+                        <li>Pastikan koneksi internet stabil</li>
+                        <li>Cek saldo di aplikasi e-wallet/mobile banking</li>
+                        <li>Coba lagi dengan jumlah yang lebih kecil</li>
+                        <li>Hubungi customer service jika masalah berlanjut</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="error-actions">
+                <a href="/" class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <polyline points="1,4 1,10 7,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M3.51 15A9 9 0 1 0 6 5L1 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Coba Lagi
+                </a>
+                
+                <button onclick="history.back()" class="btn btn-outline">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Kembali
+                </button>
+            </div>
+
+            <div class="support-info">
+                <h4>🆘 Butuh Bantuan?</h4>
+                <p>Jika masalah terus berlanjut, silakan hubungi customer service kami dengan menyertakan screenshot halaman ini.</p>
+                <div class="error-code">
+                    <small>Error Code: <code id="errorCode">PAY_ERR_001</code></small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>🔒 Powered by Duitku Payment Gateway</p>
+        </div>
+    </div>
+
+    <script>
+        // Generate random error code for tracking
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorCode = 'PAY_ERR_' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('errorCode').textContent = errorCode;
+        });
+
+        // Auto-redirect after 60 seconds
+        setTimeout(() => {
+            const autoMessage = document.createElement('div');
+            autoMessage.className = 'auto-message';
+            autoMessage.innerHTML = '<small>💡 Akan otomatis kembali ke beranda dalam 10 detik...</small>';
+            document.querySelector('.error-card').appendChild(autoMessage);
+            
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 10000);
+        }, 60000);
+    </script>
+</body>
+</html>
