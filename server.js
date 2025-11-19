@@ -113,8 +113,16 @@ if (DUITKU_CONFIG.apiKey && DUITKU_CONFIG.apiKey.length < 10) {
 }
 
 // Log API endpoint configuration
-const isProduction = DUITKU_CONFIG.baseUrl.startsWith('https://passport.duitku.com');
-const isSandbox = DUITKU_CONFIG.baseUrl.startsWith('https://sandbox.duitku.com');
+let isProduction = false;
+let isSandbox = false;
+try {
+    const apiUrl = new URL(DUITKU_CONFIG.baseUrl);
+    isProduction = apiUrl.hostname === 'passport.duitku.com';
+    isSandbox = apiUrl.hostname === 'sandbox.duitku.com';
+} catch (e) {
+    console.warn('⚠️  Invalid DUITKU_BASE_URL format:', DUITKU_CONFIG.baseUrl);
+}
+
 if (isProduction) {
     console.log('🔴 Using PRODUCTION Duitku API endpoint');
 } else if (isSandbox) {
