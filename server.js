@@ -11,6 +11,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for Heroku deployment - Required for proper rate limiting with X-Forwarded-For
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -99,6 +102,33 @@ if (missingEnvVars.length > 0) {
     if (process.env.NODE_ENV === 'production') {
         process.exit(1);
     }
+}
+
+// Validate credentials format
+if (DUITKU_CONFIG.merchantCode && DUITKU_CONFIG.merchantCode.length < 5) {
+    console.warn('⚠️  DUITKU_MERCHANT_CODE seems too short, please verify your credentials');
+}
+if (DUITKU_CONFIG.apiKey && DUITKU_CONFIG.apiKey.length < 10) {
+    console.warn('⚠️  DUITKU_API_KEY seems too short, please verify your credentials');
+}
+
+// Log API endpoint configuration
+let isProduction = false;
+let isSandbox = false;
+try {
+    const apiUrl = new URL(DUITKU_CONFIG.baseUrl);
+    isProduction = apiUrl.hostname === 'passport.duitku.com';
+    isSandbox = apiUrl.hostname === 'sandbox.duitku.com';
+} catch (e) {
+    console.warn('⚠️  Invalid DUITKU_BASE_URL format:', DUITKU_CONFIG.baseUrl);
+}
+
+if (isProduction) {
+    console.log('🔴 Using PRODUCTION Duitku API endpoint');
+} else if (isSandbox) {
+    console.log('🟡 Using SANDBOX Duitku API endpoint');
+} else {
+    console.warn('⚠️  Custom Duitku API endpoint:', DUITKU_CONFIG.baseUrl);
 }
 
 // Generate signature for Duitku
@@ -220,12 +250,16 @@ app.post('/create-payment', paymentLimiter, paymentValidationRules, handleValida
             orderId: merchantOrderId,
             amount: paymentAmount,
             customer: customerName,
-            email: customerEmail
+            email: customerEmail,
+            apiEndpoint: DUITKU_CONFIG.baseUrl
         });
 
         // Send request to Duitku
+        const apiUrl = `${DUITKU_CONFIG.baseUrl}/merchant/createinvoice`;
+        console.log('📡 Sending request to:', apiUrl);
+        
         const response = await axios.post(
-            `${DUITKU_CONFIG.baseUrl}/merchant/createinvoice`,
+            apiUrl,
             paymentData,
             {
                 headers: {
@@ -236,7 +270,12 @@ app.post('/create-payment', paymentLimiter, paymentValidationRules, handleValida
             }
         );
 
-        console.log('✅ Duitku response received:', response.data.statusCode);
+        console.log('✅ Duitku response received:', {
+            statusCode: response.data.statusCode,
+            statusMessage: response.data.statusMessage,
+            hasQrString: !!response.data.qrString,
+            hasPaymentUrl: !!response.data.paymentUrl
+        });
 
         if (response.data.statusCode === '00') {
             res.json({
@@ -256,16 +295,49 @@ app.post('/create-payment', paymentLimiter, paymentValidationRules, handleValida
         }
 
     } catch (error) {
-        console.error('❌ Payment creation error:', {
+        // Detailed error logging for debugging
+        const errorDetails = {
             message: error.message,
-            response: error.response?.data,
-            status: error.response?.status
-        });
+            code: error.code,
+            httpStatus: error.response?.status,
+            httpStatusText: error.response?.statusText,
+            duitkuResponse: error.response?.data,
+            duitkuStatusCode: error.response?.data?.statusCode,
+            duitkuStatusMessage: error.response?.data?.statusMessage,
+            requestUrl: error.config?.url,
+            requestMethod: error.config?.method,
+            timeout: error.code === 'ECONNABORTED'
+        };
+        
+        console.error('❌ Payment creation error:', errorDetails);
+        
+        // Enhanced error messages based on error type
+        let userMessage = 'Gagal membuat pembayaran. Silakan coba lagi.';
+        let debugInfo = error.message;
+        
+        if (error.code === 'ECONNABORTED') {
+            userMessage = 'Request timeout. Payment gateway tidak merespons dalam waktu yang ditentukan.';
+            debugInfo = 'Connection timeout - Check network or API endpoint availability';
+        } else if (error.response?.status === 500) {
+            userMessage = 'Payment gateway mengalami kesalahan internal. Silakan coba beberapa saat lagi.';
+            debugInfo = `HTTP 500: ${error.response?.data?.statusMessage || 'Internal Server Error'} - Check API credentials and endpoint configuration`;
+        } else if (error.response?.status === 401 || error.response?.status === 403) {
+            userMessage = 'Kesalahan autentikasi. Silakan hubungi administrator.';
+            debugInfo = 'Authentication failed - Check DUITKU_MERCHANT_CODE and DUITKU_API_KEY';
+        } else if (error.response?.status === 400) {
+            userMessage = error.response?.data?.statusMessage || 'Data pembayaran tidak valid.';
+            debugInfo = `Bad Request: ${JSON.stringify(error.response?.data)}`;
+        } else if (error.response?.data?.statusMessage) {
+            userMessage = error.response.data.statusMessage;
+            debugInfo = userMessage;
+        }
+        
+        console.error('💡 Debug info:', debugInfo);
         
         res.status(500).json({
             success: false,
-            message: error.response?.data?.statusMessage || 'Gagal membuat pembayaran. Silakan coba lagi.',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Payment gateway error'
+            message: userMessage,
+            error: process.env.NODE_ENV === 'development' ? debugInfo : 'Payment gateway error'
         });
     }
 });
@@ -369,15 +441,35 @@ app.get('/payment-status/:merchantOrderId', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Status check error:', {
+        const errorDetails = {
             message: error.message,
-            response: error.response?.data
-        });
+            code: error.code,
+            httpStatus: error.response?.status,
+            duitkuResponse: error.response?.data,
+            timeout: error.code === 'ECONNABORTED'
+        };
+        
+        console.error('❌ Status check error:', errorDetails);
+        
+        let userMessage = 'Gagal mengecek status pembayaran';
+        let debugInfo = error.message;
+        
+        if (error.code === 'ECONNABORTED') {
+            userMessage = 'Request timeout saat mengecek status pembayaran.';
+            debugInfo = 'Connection timeout - Check network or API endpoint';
+        } else if (error.response?.status === 500) {
+            debugInfo = `HTTP 500: ${error.response?.data?.statusMessage || 'Internal Server Error'}`;
+        } else if (error.response?.data?.statusMessage) {
+            userMessage = error.response.data.statusMessage;
+            debugInfo = userMessage;
+        }
+        
+        console.error('💡 Debug info:', debugInfo);
         
         res.status(500).json({
             success: false,
-            message: 'Gagal mengecek status pembayaran',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Status check failed'
+            message: userMessage,
+            error: process.env.NODE_ENV === 'development' ? debugInfo : 'Status check failed'
         });
     }
 });
@@ -393,7 +485,10 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔧 Trust Proxy: enabled (Heroku compatible)`);
     console.log(`💳 Duitku API: ${DUITKU_CONFIG.baseUrl}`);
+    console.log(`📋 Merchant Code: ${DUITKU_CONFIG.merchantCode ? '✓ Set' : '✗ Missing'}`);
+    console.log(`🔑 API Key: ${DUITKU_CONFIG.apiKey ? '✓ Set' : '✗ Missing'}`);
     console.log(`✅ Health check: http://localhost:${PORT}/health`);
     
     if (missingEnvVars.length > 0) {
